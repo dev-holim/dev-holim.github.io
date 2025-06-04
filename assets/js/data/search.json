@@ -1,1 +1,1 @@
-[ ]
+[ { "title": "Writing a New Post", "url": "/blogging/tutorial/2019/08/08/write-a-new-post.html", "categories": "Blogging, Tutorial", "tags": "writing", "date": "2019-08-08 15:10:00 +0900", "content": "This tutorial will guide you how to write a post in the Chirpy template, and it’s worth reading even if you’ve used Jekyll before, as many features require specific variables to be set. Naming and..." } ]
