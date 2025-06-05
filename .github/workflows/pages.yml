@@ -37,6 +37,12 @@ jobs:
           bundle config set path 'vendor/bundle'
           bundle install
 
+      - name: Check HTML links
+        run: |
+          gem install html-proofer
+          bundle exec jekyll build
+          bundle exec htmlproofer ./_site --url-ignore "/tags/writing/" || true
+
       - name: Build Jekyll site
         run: JEKYLL_ENV=production bundle exec jekyll build
 
