@@ -1,0 +1,98 @@
+---
+layout: page
+# Category Widget Layout - 여러 카테고리별 최신 포스트 위젯 표시
+---
+
+{% include lang.html %}
+
+{% assign widget_categories = page.widget_categories | default: false %}
+{% assign posts_per_category = page.posts_per_category | default: 5 %}
+{% assign show_all_categories = page.show_all_categories | default: false %}
+
+{% comment %}
+사용법:
+1. 특정 카테고리들만: widget_categories: ["Database", "Blog"]
+2. 모든 카테고리 표시: show_all_categories: true
+3. 카테고리당 포스트 수: posts_per_category: 3
+{% endcomment %}
+
+<div id="page-category-widgets">
+  <h1 class="ps-lg-2">
+    <i class="fas fa-th-large fa-fw text-muted"></i>
+    {{ page.title | default: "Categories Overview" }}
+  </h1>
+
+  {% if show_all_categories %}
+    {% assign display_categories = site.categories | sort %}
+  {% elsif widget_categories %}
+    {% assign display_categories = '' | split: '' %}
+    {% for cat_name in widget_categories %}
+      {% for category in site.categories %}
+        {% assign category_name = category | first %}
+        {% if category_name == cat_name %}
+          {% assign display_categories = display_categories | push: category %}
+          {% break %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+  {% else %}
+    {% assign display_categories = site.categories | sort | slice: 0, 6 %}
+  {% endif %}
+
+  <div class="row">
+    {% for category in display_categories %}
+      {% assign category_name = category | first %}
+      {% assign posts_of_category = category | last %}
+      {% assign limited_posts = posts_of_category | slice: 0, posts_per_category %}
+      
+      <div class="col-lg-6 col-xl-4 mb-4">
+        <div class="card category-widget h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+              <i class="far fa-folder fa-fw text-muted"></i>
+              {% capture _category_url %}/categories/{{ category_name | slugify | url_encode }}/{% endcapture %}
+              <a href="{{ _category_url | relative_url }}" class="text-decoration-none">
+                {{ category_name }}
+              </a>
+            </h5>
+            <span class="badge bg-primary">{{ posts_of_category | size }}</span>
+          </div>
+          
+          <div class="card-body">
+            {% if limited_posts.size > 0 %}
+              <ul class="list-unstyled">
+                {% for post in limited_posts %}
+                  <li class="mb-2">
+                    <a href="{{ post.url | relative_url }}" class="post-link d-block">
+                      <div class="post-title-widget">{{ post.title }}</div>
+                      <small class="text-muted">
+                        {% include datetime.html date=post.date class='text-muted' lang=lang %}
+                      </small>
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+              
+              {% if posts_of_category.size > posts_per_category %}
+                <div class="text-center mt-3">
+                  <a href="{{ _category_url | relative_url }}" class="btn btn-outline-primary btn-sm">
+                    View All ({{ posts_of_category.size }})
+                  </a>
+                </div>
+              {% endif %}
+            {% else %}
+              <p class="text-muted mb-0">No posts in this category</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if display_categories.size == 0 %}
+    <div class="alert alert-info" role="alert">
+      <i class="fas fa-info-circle me-2"></i>
+      No categories found matching the specified criteria.
+    </div>
+  {% endif %}
+</div> 

@@ -1,0 +1,175 @@
+{% comment %}
+카테고리 포스트 Include 컴포넌트
+사용법: {% include category-posts.html category="Database" limit=5 style="compact" %}
+
+Parameters:
+- category: 단일 카테고리명
+- categories: 여러 카테고리 배열 (문자열로 전달: "Database,PostgreSQL")
+- exclude: 제외할 카테고리 (문자열로 전달: "Example,Test")
+- limit: 표시할 포스트 수 (기본값: 10)
+- style: 표시 스타일 ("compact", "detailed", "simple") (기본값: "simple")
+- show_categories: 카테고리 뱃지 표시 여부 (기본값: true)
+- show_date: 날짜 표시 여부 (기본값: true)
+{% endcomment %}
+
+{% assign filter_category = include.category | default: false %}
+{% assign filter_categories_str = include.categories | default: false %}
+{% assign exclude_categories_str = include.exclude | default: false %}
+{% assign post_limit = include.limit | default: 10 %}
+{% assign display_style = include.style | default: "simple" %}
+{% assign show_categories = include.show_categories | default: true %}
+{% assign show_date = include.show_date | default: true %}
+
+{% comment %} 문자열을 배열로 변환 {% endcomment %}
+{% if filter_categories_str %}
+  {% assign filter_categories = filter_categories_str | split: "," %}
+{% else %}
+  {% assign filter_categories = false %}
+{% endif %}
+
+{% if exclude_categories_str %}
+  {% assign exclude_categories = exclude_categories_str | split: "," %}
+{% else %}
+  {% assign exclude_categories = false %}
+{% endif %}
+
+{% comment %} 포스트 필터링 {% endcomment %}
+{% assign filtered_posts = '' | split: '' %}
+
+{% for post in site.posts %}
+  {% assign include_post = false %}
+  
+  {% comment %} 단일 카테고리 필터링 {% endcomment %}
+  {% if filter_category %}
+    {% if post.categories contains filter_category %}
+      {% assign include_post = true %}
+    {% endif %}
+  {% endif %}
+  
+  {% comment %} 여러 카테고리 필터링 {% endcomment %}
+  {% if filter_categories %}
+    {% assign matches = 0 %}
+    {% for category in filter_categories %}
+      {% assign category = category | strip %}
+      {% if post.categories contains category %}
+        {% assign matches = matches | plus: 1 %}
+      {% endif %}
+    {% endfor %}
+    {% if matches == filter_categories.size %}
+      {% assign include_post = true %}
+    {% endif %}
+  {% endif %}
+  
+  {% comment %} 필터링 조건이 없으면 모든 포스트 포함 {% endcomment %}
+  {% unless filter_category or filter_categories %}
+    {% assign include_post = true %}
+  {% endunless %}
+  
+  {% comment %} 제외할 카테고리 체크 {% endcomment %}
+  {% if exclude_categories and include_post %}
+    {% for exclude_cat in exclude_categories %}
+      {% assign exclude_cat = exclude_cat | strip %}
+      {% if post.categories contains exclude_cat %}
+        {% assign include_post = false %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+  
+  {% comment %} 포스트 추가 {% endcomment %}
+  {% if include_post %}
+    {% assign filtered_posts = filtered_posts | push: post %}
+  {% endif %}
+  
+  {% comment %} 제한된 수만큼만 처리 {% endcomment %}
+  {% if filtered_posts.size >= post_limit %}
+    {% break %}
+  {% endif %}
+{% endfor %}
+
+{% comment %} 개수 제한 적용 {% endcomment %}
+{% assign filtered_posts = filtered_posts | slice: 0, post_limit %}
+
+<div class="category-posts-include {{ display_style }}">
+  {% if filtered_posts.size > 0 %}
+    {% if display_style == "compact" %}
+      <div class="row">
+        {% for post in filtered_posts %}
+          <div class="col-md-6 mb-2">
+            <div class="card post-card-compact">
+              <div class="card-body p-3">
+                <h6 class="card-title mb-1">
+                  <a href="{{ post.url | relative_url }}" class="text-decoration-none">{{ post.title }}</a>
+                </h6>
+                {% if show_date %}
+                  <small class="text-muted">{{ post.date | date: "%Y-%m-%d" }}</small>
+                {% endif %}
+                {% if show_categories and post.categories.size > 0 %}
+                  <div class="mt-1">
+                    {% for category in post.categories limit:2 %}
+                      <span class="badge bg-light text-dark me-1" style="font-size: 0.65em;">{{ category }}</span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    
+    {% elsif display_style == "detailed" %}
+      {% for post in filtered_posts %}
+        <div class="card mb-3 post-card-detailed">
+          <div class="card-body">
+            <h5 class="card-title">
+              <a href="{{ post.url | relative_url }}" class="text-decoration-none">{{ post.title }}</a>
+            </h5>
+            {% if post.excerpt %}
+              <p class="card-text">{{ post.excerpt | strip_html | truncatewords: 30 }}</p>
+            {% endif %}
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                {% if show_categories and post.categories.size > 0 %}
+                  {% for category in post.categories %}
+                    <span class="badge bg-secondary me-1">{{ category }}</span>
+                  {% endfor %}
+                {% endif %}
+              </div>
+              {% if show_date %}
+                <small class="text-muted">{{ post.date | date: "%Y-%m-%d" }}</small>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    
+    {% else %} {% comment %} simple style {% endcomment %}
+      <ul class="list-unstyled">
+        {% for post in filtered_posts %}
+          <li class="mb-2 pb-2 border-bottom">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <a href="{{ post.url | relative_url }}" class="text-decoration-none fw-medium">{{ post.title }}</a>
+                {% if show_categories and post.categories.size > 0 %}
+                  <div class="mt-1">
+                    {% for category in post.categories limit:3 %}
+                      <span class="badge bg-light text-dark me-1" style="font-size: 0.7em;">{{ category }}</span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              {% if show_date %}
+                <small class="text-muted ms-2">{{ post.date | date: "%m/%d" }}</small>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% else %}
+    <div class="alert alert-info" role="alert">
+      <i class="fas fa-info-circle me-2"></i>
+      조건에 맞는 포스트가 없습니다.
+    </div>
+  {% endif %}
+</div> 

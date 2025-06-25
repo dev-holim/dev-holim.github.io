@@ -1,0 +1,168 @@
+---
+layout: page
+# Category Filter Layout - 특정 카테고리의 포스트만 표시
+---
+
+{% include lang.html %}
+
+{% assign filter_category = page.filter_category | default: page.category %}
+{% assign filter_categories = page.filter_categories | default: false %}
+{% assign exclude_categories = page.exclude_categories | default: false %}
+{% assign max_posts = page.max_posts | default: false %}
+{% assign posts_per_page = page.posts_per_page | default: 10 %}
+{% assign current_page = page.current_page | default: 1 %}
+
+{% comment %}
+사용법:
+1. 단일 카테고리 필터링: filter_category: "PostgreSQL"
+2. 여러 카테고리 필터링: filter_categories: ["Database", "PostgreSQL"]  
+3. 특정 카테고리 제외: exclude_categories: ["Example"]
+4. 포스트 개수 제한: max_posts: 10
+5. 페이지당 포스트 수: posts_per_page: 10
+{% endcomment %}
+
+<div id="page-category-filter">
+  <h1 class="ps-lg-2">
+    <i class="far fa-folder-open fa-fw text-muted"></i>
+    {% if page.title %}
+      {{ page.title }}
+    {% elsif filter_category %}
+      {{ filter_category }} Posts
+    {% elsif filter_categories %}
+      {{ filter_categories | join: ", " }} Posts
+    {% else %}
+      Filtered Posts
+    {% endif %}
+  </h1>
+
+  {% assign filtered_posts = '' | split: '' %}
+  
+  {% for post in site.posts %}
+    {% assign include_post = false %}
+    
+    {% comment %} 단일 카테고리 필터링 {% endcomment %}
+    {% if filter_category %}
+      {% if post.categories contains filter_category %}
+        {% assign include_post = true %}
+      {% endif %}
+    {% endif %}
+    
+    {% comment %} 여러 카테고리 필터링 {% endcomment %}
+    {% if filter_categories %}
+      {% assign matches = 0 %}
+      {% for category in filter_categories %}
+        {% if post.categories contains category %}
+          {% assign matches = matches | plus: 1 %}
+        {% endif %}
+      {% endfor %}
+      {% if matches == filter_categories.size %}
+        {% assign include_post = true %}
+      {% endif %}
+    {% endif %}
+    
+    {% comment %} 필터링 조건이 없으면 모든 포스트 포함 {% endcomment %}
+    {% unless filter_category or filter_categories %}
+      {% assign include_post = true %}
+    {% endunless %}
+    
+    {% comment %} 제외할 카테고리 체크 {% endcomment %}
+    {% if exclude_categories and include_post %}
+      {% for exclude_cat in exclude_categories %}
+        {% if post.categories contains exclude_cat %}
+          {% assign include_post = false %}
+          {% break %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    
+    {% comment %} 포스트 추가 {% endcomment %}
+    {% if include_post %}
+      {% assign filtered_posts = filtered_posts | push: post %}
+    {% endif %}
+  {% endfor %}
+
+  {% comment %} 개수 제한 적용 {% endcomment %}
+  {% if max_posts %}
+    {% assign filtered_posts = filtered_posts | slice: 0, max_posts %}
+  {% endif %}
+
+  {% comment %} 페이지네이션 적용 {% endcomment %}
+  {% assign total_posts = filtered_posts.size %}
+  {% assign total_pages = total_posts | divided_by: posts_per_page | ceil %}
+  {% assign offset = posts_per_page | times: current_page | minus: posts_per_page %}
+  {% assign paginated_posts = filtered_posts | slice: offset, posts_per_page %}
+
+  <div class="post-count mb-3">
+    <span class="lead text-muted ps-2">
+      {{ total_posts }} posts
+      {% if total_pages > 1 %}
+        (Page {{ current_page }} of {{ total_pages }})
+      {% endif %}
+    </span>
+  </div>
+
+  {% if filtered_posts.size > 0 %}
+    <ul class="content ps-0">
+      {% for post in paginated_posts %}
+        <li class="d-flex justify-content-between px-md-3 mb-2">
+          <div class="post-info">
+            <a href="{{ post.url | relative_url }}" class="post-title">{{ post.title }}</a>
+            {% if post.categories.size > 0 %}
+              <div class="post-categories mt-1">
+                {% for category in post.categories %}
+                  <span class="badge bg-secondary me-1">{{ category }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="post-meta text-end">
+            {% include datetime.html date=post.date class='text-muted small text-nowrap' lang=lang %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+
+    {% if total_pages > 1 %}
+    <div class="pagination d-flex justify-content-center mt-4">
+      <nav aria-label="Page navigation">
+        <ul class="pagination mb-0">
+          {% if current_page > 1 %}
+            <li class="page-item">
+              <a class="page-link" href="{{ page.url | relative_url }}?page={{ current_page | minus: 1 }}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+          {% endif %}
+
+          {% for page_num in (1..total_pages) %}
+            <li class="page-item {% if page_num == current_page %}active{% endif %}">
+              <a class="page-link" href="{{ page.url | relative_url }}?page={{ page_num }}">{{ page_num }}</a>
+            </li>
+          {% endfor %}
+
+          {% if current_page < total_pages %}
+            <li class="page-item">
+              <a class="page-link" href="{{ page.url | relative_url }}?page={{ current_page | plus: 1 }}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
+  {% else %}
+    <div class="alert alert-info" role="alert">
+      <i class="fas fa-info-circle me-2"></i>
+      {% if filter_category %}
+        "{{ filter_category }}" 카테고리에 해당하는 포스트가 없습니다.
+      {% elsif filter_categories %}
+        "{{ filter_categories | join: ", " }}" 카테고리에 해당하는 포스트가 없습니다.
+      {% else %}
+        조건에 맞는 포스트가 없습니다.
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<script src="{{ '/assets/js/category-filter.js' | relative_url }}"></script> 

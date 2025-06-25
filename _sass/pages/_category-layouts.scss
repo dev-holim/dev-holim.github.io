@@ -1,0 +1,116 @@
+/*
+ * Category Layouts Styles
+ * For category-filter.html and category-widget.html layouts
+ */
+
+/* Category Filter Layout Styles */
+#page-category-filter {
+  .post-info {
+    flex: 1;
+  }
+
+  .post-title {
+    font-weight: 500;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--bs-primary);
+    }
+  }
+
+  .post-categories .badge {
+    font-size: 0.75em;
+  }
+
+  .post-meta {
+    min-width: 120px;
+    margin-left: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .d-flex.justify-content-between {
+      flex-direction: column;
+      align-items: flex-start !important;
+    }
+    
+    .post-meta {
+      margin-left: 0;
+      margin-top: 0.5rem;
+      text-align: left !important;
+    }
+  }
+}
+
+/* Category Widget Layout Styles */
+#page-category-widgets {
+  .category-widget {
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    transition: box-shadow 0.15s ease-in-out;
+
+    &:hover {
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    .card-header {
+      background-color: rgba(0, 0, 0, 0.03);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    }
+  }
+
+  .post-link {
+    text-decoration: none;
+    color: inherit;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.15s ease-in-out;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+      color: inherit;
+    }
+  }
+
+  .post-title-widget {
+    font-weight: 500;
+    line-height: 1.3;
+    margin-bottom: 0.25rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-title a {
+    color: inherit;
+
+    &:hover {
+      color: var(--bs-primary);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .col-lg-6 {
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+/* Category Posts Include Component Styles */
+.category-posts-include {
+  .post-card-compact {
+    border: 1px solid #dee2e6;
+    transition: box-shadow 0.15s ease-in-out;
+
+    &:hover {
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+  }
+
+  .post-card-detailed {
+    border: 1px solid #dee2e6;
+  }
+
+  &.simple .border-bottom:last-child {
+    border-bottom: none !important;
+  }
+} 
